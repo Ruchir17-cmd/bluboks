@@ -2,71 +2,86 @@
 
 import { useState, useEffect, useRef } from "react";
 import { motion, useInView, AnimatePresence } from "framer-motion";
+import { useRouter } from "next/navigation";
 
-// ─── HOW IT WORKS — Pulse Ring ───────────────────────────────────────────────
+// ─── UTILS ───────────────────────────────────────────────────────────────────
+function scrollTo(id) {
+  document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+}
+
+function useHover() {
+  const [hovered, setHovered] = useState(false);
+  return [hovered, { onMouseEnter: () => setHovered(true), onMouseLeave: () => setHovered(false) }];
+}
+
+// ─── FADE IN ON SCROLL ───────────────────────────────────────────────────────
+function Reveal({ children, delay = 0, style = {} }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-80px" });
+  return (
+    <motion.div ref={ref}
+      initial={{ opacity: 0, y: 28 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.8, delay: delay / 1000, ease: [0.16, 1, 0.3, 1] }}
+      style={style}>
+      {children}
+    </motion.div>
+  );
+}
+
+// ─── PULSE RING ──────────────────────────────────────────────────────────────
 function PulseRing({ delay = 0 }) {
   return (
-    <motion.span
-      style={{
-        position: "absolute",
-        inset: 0,
-        borderRadius: "50%",
-        border: "1px solid rgba(59,130,246,0.25)",
-      }}
-      initial={{ scale: 1, opacity: 0.6 }}
-      animate={{ scale: 2.2, opacity: 0 }}
-      transition={{ duration: 2, delay, repeat: Infinity, ease: "easeOut" }}
+    <motion.span style={{ position: "absolute", inset: 0, borderRadius: "50%", border: "1px solid rgba(59,130,246,0.2)" }}
+      initial={{ scale: 1, opacity: 0.5 }}
+      animate={{ scale: 2.6, opacity: 0 }}
+      transition={{ duration: 2.4, delay, repeat: Infinity, ease: "easeOut" }}
     />
   );
 }
 
-// ─── HOW IT WORKS — Animated Scene ──────────────────────────────────────────
+// ─── ANIMATED SCENE ─────────────────────────────────────────────────────────
 function BlueboxScene({ play }) {
   const [step, setStep] = useState(0);
-
   useEffect(() => {
     if (!play) return;
-    const timers = [
-      setTimeout(() => setStep(1), 300),
-      setTimeout(() => setStep(2), 1400),
-      setTimeout(() => setStep(3), 2800),
+    const t = [
+      setTimeout(() => setStep(1), 400),
+      setTimeout(() => setStep(2), 1600),
+      setTimeout(() => setStep(3), 3200),
     ];
-    return () => timers.forEach(clearTimeout);
+    return () => t.forEach(clearTimeout);
   }, [play]);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "48px", padding: "64px 24px", minHeight: 420 }}>
-      {/* Device */}
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 56, padding: "80px 24px", minHeight: 460 }}>
       <motion.div
-        initial={{ opacity: 0, scale: 0.88 }}
+        initial={{ opacity: 0, scale: 0.9 }}
         animate={step >= 1 ? { opacity: 1, scale: 1 } : {}}
-        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}
-      >
-        <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          {step === 2 && (<><PulseRing delay={0} /><PulseRing delay={0.7} /><PulseRing delay={1.4} /></>)}
-          <div style={{ width: 64, height: 64, borderRadius: 18, background: "#0a0a0a", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 8px 32px rgba(0,0,0,0.14)", position: "relative", zIndex: 1 }}>
+        transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+        style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 20 }}>
+        <div style={{ position: "relative", width: 72, height: 72, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          {step === 2 && <><PulseRing delay={0} /><PulseRing delay={0.8} /><PulseRing delay={1.6} /></>}
+          <div style={{ width: 72, height: 72, borderRadius: 22, background: "#0a0a0a", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 12px 40px rgba(0,0,0,0.18)", position: "relative", zIndex: 1 }}>
             <motion.div
-              animate={step >= 2 ? { opacity: [1, 0.3, 1] } : { opacity: 0.4 }}
-              transition={{ duration: 1.6, repeat: step === 2 ? Infinity : 0, ease: "easeInOut" }}
-              style={{ width: 8, height: 8, borderRadius: "50%", background: "#3b82f6" }}
+              animate={step >= 2 ? { opacity: [1, 0.2, 1] } : { opacity: 0.35 }}
+              transition={{ duration: 1.8, repeat: step === 2 ? Infinity : 0, ease: "easeInOut" }}
+              style={{ width: 9, height: 9, borderRadius: "50%", background: "#3b82f6" }}
             />
           </div>
         </div>
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={step >= 1 ? { opacity: 1 } : {}}
-          transition={{ duration: 0.6, delay: 0.3 }}
-          style={{ fontSize: 12, color: "#aaa", letterSpacing: "0.08em", textTransform: "uppercase", margin: 0, fontWeight: 500 }}
-        >
+        <motion.p initial={{ opacity: 0 }} animate={step >= 1 ? { opacity: 1 } : {}} transition={{ duration: 0.7, delay: 0.4 }}
+          style={{ fontSize: 11, color: "#c0c0c0", letterSpacing: "0.12em", textTransform: "uppercase", margin: 0, fontWeight: 500 }}>
           Bluebox
         </motion.p>
       </motion.div>
 
       <AnimatePresence>
         {step === 2 && (
-          <motion.p key="obs" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.6 }}
-            style={{ fontSize: 13, color: "#bbb", margin: 0, letterSpacing: "0.04em" }}>
+          <motion.p key="obs"
+            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.7 }}
+            style={{ fontSize: 13, color: "#c0c0c0", margin: 0, letterSpacing: "0.05em", fontStyle: "italic" }}>
             Quietly observing…
           </motion.p>
         )}
@@ -74,24 +89,29 @@ function BlueboxScene({ play }) {
 
       <AnimatePresence>
         {step >= 3 && (
-          <motion.div key="line" initial={{ scaleY: 0, opacity: 0 }} animate={{ scaleY: 1, opacity: 1 }} transition={{ duration: 0.5 }}
-            style={{ width: 1, height: 40, background: "linear-gradient(to bottom, #e0e0e0, transparent)", transformOrigin: "top", marginTop: -24, marginBottom: -24 }} />
+          <motion.div key="line"
+            initial={{ scaleY: 0, opacity: 0 }} animate={{ scaleY: 1, opacity: 1 }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+            style={{ width: 1, height: 48, background: "linear-gradient(to bottom, #d0d0d0, transparent)", transformOrigin: "top", marginTop: -32, marginBottom: -32 }}
+          />
         )}
       </AnimatePresence>
 
       <AnimatePresence>
         {step >= 3 && (
-          <motion.div key="card" initial={{ opacity: 0, y: 20, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-            style={{ background: "#fff", border: "1px solid #e8e8e8", borderRadius: 20, padding: "24px 28px", maxWidth: 360, width: "100%", boxShadow: "0 4px 32px rgba(0,0,0,0.07)" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-              <span style={{ fontSize: 16 }}>⚠️</span>
-              <span style={{ fontWeight: 600, fontSize: 14, color: "#111", letterSpacing: "-0.01em" }}>Issue detected</span>
+          <motion.div key="card"
+            initial={{ opacity: 0, y: 24, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+            style={{ background: "#fff", border: "1px solid #ececec", borderRadius: 24, padding: "28px 32px", maxWidth: 380, width: "100%", boxShadow: "0 8px 48px rgba(0,0,0,0.06)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+              <span style={{ fontSize: 15 }}>⚠️</span>
+              <span style={{ fontWeight: 600, fontSize: 14, color: "#111", letterSpacing: "-0.02em" }}>Issue detected</span>
             </div>
-            <p style={{ fontSize: 14, color: "#555", lineHeight: 1.65, margin: "0 0 10px" }}>Your internet slowed down due to high usage across multiple devices.</p>
-            <p style={{ fontSize: 13, color: "#3b82f6", fontWeight: 500, margin: 0 }}>No immediate action needed.</p>
-            <div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px solid #f0f0f0", display: "flex", alignItems: "center", gap: 8 }}>
+            <p style={{ fontSize: 14, color: "#666", lineHeight: 1.7, margin: "0 0 12px" }}>Your internet slowed down due to high usage across multiple devices.</p>
+            <p style={{ fontSize: 13, color: "#3b82f6", fontWeight: 500, margin: 0, letterSpacing: "-0.01em" }}>No immediate action needed.</p>
+            <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid #f2f2f2", display: "flex", alignItems: "center", gap: 8 }}>
               <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#22c55e" }} />
-              <span style={{ fontSize: 11, color: "#ccc", letterSpacing: "0.03em" }}>Bluebox · Just now</span>
+              <span style={{ fontSize: 11, color: "#c8c8c8", letterSpacing: "0.03em" }}>Bluebox · Just now</span>
             </div>
           </motion.div>
         )}
@@ -100,44 +120,9 @@ function BlueboxScene({ play }) {
   );
 }
 
-// ─── HOW IT WORKS — Section ──────────────────────────────────────────────────
-function HowItWorks() {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "-80px" });
-
-  return (
-    <section ref={ref} style={{ padding: "100px 20px", background: "#fafafa", borderTop: "1px solid #f0f0f0", borderBottom: "1px solid #f0f0f0" }}>
-      <div style={{ maxWidth: 640, margin: "0 auto", textAlign: "center" }}>
-        <motion.p initial={{ opacity: 0, y: 10 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6 }}
-          style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: "#aaa", fontWeight: 500, marginBottom: 14 }}>
-          How it works
-        </motion.p>
-        <motion.h2 initial={{ opacity: 0, y: 12 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.7, delay: 0.1 }}
-          style={{ fontSize: "clamp(26px, 4vw, 38px)", fontWeight: 700, letterSpacing: "-0.03em", color: "#0a0a0a", lineHeight: 1.15, margin: "0 0 16px" }}>
-          Sits quietly.<br />Speaks simply.
-        </motion.h2>
-        <motion.p initial={{ opacity: 0, y: 10 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.7, delay: 0.2 }}
-          style={{ fontSize: 16, color: "#888", lineHeight: 1.65, margin: "0 auto 60px", maxWidth: 420 }}>
-          Bluebox watches your office systems in the background and sends you a plain message the moment something needs attention.
-        </motion.p>
-        <BlueboxScene play={inView} />
-        <motion.div initial={{ opacity: 0 }} animate={inView ? { opacity: 1 } : {}} transition={{ duration: 0.8, delay: 3.2 }}
-          style={{ display: "flex", justifyContent: "center", gap: "40px", marginTop: 48, flexWrap: "wrap" }}>
-          {[{ num: "01", label: "Plug it in" }, { num: "02", label: "It observes" }, { num: "03", label: "You're informed" }].map(s => (
-            <div key={s.num} style={{ textAlign: "center" }}>
-              <p style={{ fontSize: 11, color: "#ccc", fontWeight: 600, letterSpacing: "0.08em", margin: "0 0 4px" }}>{s.num}</p>
-              <p style={{ fontSize: 13, color: "#888", margin: 0 }}>{s.label}</p>
-            </div>
-          ))}
-        </motion.div>
-      </div>
-    </section>
-  );
-}
-
-// ─── ALERT CARD (rotating) ───────────────────────────────────────────────────
-const ALERT_MSGS = [
-  { icon: "⚠️", title: "Unusual activity noticed", body: "Your internet connection slowed down due to high usage across multiple devices.", action: "No immediate action needed — normal by evening." },
+// ─── ROTATING ALERT CARD ─────────────────────────────────────────────────────
+const MSGS = [
+  { icon: "⚠️", title: "Unusual activity noticed", body: "Your internet slowed down due to high usage across multiple devices.", action: "No immediate action needed — normal by evening." },
   { icon: "✅", title: "All systems running smoothly", body: "Everything looks good this morning. No issues detected overnight.", action: "You're all set for the day." },
   { icon: "🔔", title: "Printer offline", body: "The office printer lost its connection about 10 minutes ago.", action: "Try turning it off and on again. That usually does it." },
 ];
@@ -145,203 +130,266 @@ const ALERT_MSGS = [
 function AlertCard() {
   const [idx, setIdx] = useState(0);
   const [fade, setFade] = useState(true);
-  const msg = ALERT_MSGS[idx];
-
+  const msg = MSGS[idx];
   useEffect(() => {
     const t = setInterval(() => {
       setFade(false);
-      setTimeout(() => { setIdx(i => (i + 1) % ALERT_MSGS.length); setFade(true); }, 320);
-    }, 3800);
+      setTimeout(() => { setIdx(i => (i + 1) % MSGS.length); setFade(true); }, 350);
+    }, 4000);
     return () => clearInterval(t);
   }, []);
-
   return (
-    <div style={{ background: "#fff", border: "1px solid #e8e8e8", borderRadius: 20, padding: "28px 32px", maxWidth: 440, margin: "0 auto", boxShadow: "0 4px 32px rgba(0,0,0,0.07)", transition: "opacity 0.3s ease", opacity: fade ? 1 : 0 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+    <div style={{ background: "#fff", border: "1px solid #ececec", borderRadius: 24, padding: "32px 36px", maxWidth: 460, margin: "0 auto", boxShadow: "0 8px 48px rgba(0,0,0,0.06)", transition: "opacity 0.35s ease", opacity: fade ? 1 : 0 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
         <span style={{ fontSize: 18 }}>{msg.icon}</span>
-        <span style={{ fontWeight: 600, fontSize: 15, color: "#111", letterSpacing: "-0.01em" }}>{msg.title}</span>
+        <span style={{ fontWeight: 600, fontSize: 15, color: "#111", letterSpacing: "-0.02em" }}>{msg.title}</span>
       </div>
-      <p style={{ fontSize: 14, color: "#555", lineHeight: 1.65, margin: "0 0 10px" }}>{msg.body}</p>
-      <p style={{ fontSize: 13.5, color: "#3b82f6", fontWeight: 500, margin: 0 }}>{msg.action}</p>
-      <div style={{ marginTop: 18, paddingTop: 14, borderTop: "1px solid #f0f0f0", display: "flex", alignItems: "center", gap: 8 }}>
-        <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#22c55e" }} />
-        <span style={{ fontSize: 12, color: "#aaa", letterSpacing: "0.02em" }}>Bluebox · Just now</span>
+      <p style={{ fontSize: 15, color: "#666", lineHeight: 1.7, margin: "0 0 12px" }}>{msg.body}</p>
+      <p style={{ fontSize: 14, color: "#3b82f6", fontWeight: 500, margin: 0 }}>{msg.action}</p>
+      <div style={{ marginTop: 20, paddingTop: 18, borderTop: "1px solid #f2f2f2", display: "flex", alignItems: "center", gap: 8 }}>
+        <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#22c55e" }} />
+        <span style={{ fontSize: 12, color: "#c8c8c8", letterSpacing: "0.02em" }}>Bluebox · Just now</span>
       </div>
     </div>
   );
 }
 
-// ─── FADE IN ON SCROLL ───────────────────────────────────────────────────────
-function FadeIn({ children, delay = 0, style = {} }) {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "-60px" });
-  return (
-    <motion.div ref={ref} initial={{ opacity: 0, y: 22 }} animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.65, delay: delay / 1000, ease: "easeOut" }} style={style}>
-      {children}
-    </motion.div>
-  );
+// ─── BUTTON ──────────────────────────────────────────────────────────────────
+function Btn({ children, onClick, variant = "dark", style = {} }) {
+  const [hov, hoverProps] = useHover();
+  const base = {
+    border: "none", borderRadius: 12, fontSize: 15, fontWeight: 500,
+    cursor: "pointer", transition: "all 0.2s ease", letterSpacing: "-0.01em",
+    padding: "14px 30px", display: "inline-flex", alignItems: "center", gap: 6,
+    fontFamily: "inherit",
+  };
+  const variants = {
+    dark: { background: hov ? "#222" : "#111", color: "#fff", boxShadow: hov ? "0 8px 24px rgba(0,0,0,0.18)" : "0 2px 8px rgba(0,0,0,0.1)", transform: hov ? "translateY(-1px)" : "none" },
+    ghost: { background: "transparent", color: hov ? "#111" : "#666", border: "1px solid", borderColor: hov ? "#ccc" : "#e4e4e4", transform: hov ? "translateY(-1px)" : "none" },
+    white: { background: hov ? "#f5f5f5" : "#fff", color: "#111", transform: hov ? "translateY(-1px)" : "none", boxShadow: hov ? "0 8px 24px rgba(0,0,0,0.12)" : "none" },
+  };
+  return <button onClick={onClick} style={{ ...base, ...variants[variant], ...style }} {...hoverProps}>{children}</button>;
 }
 
 // ─── DATA ────────────────────────────────────────────────────────────────────
 const FEATURES = [
-  { title: "Instant alerts", desc: "Know the moment something changes — before it becomes a problem." },
-  { title: "Plain explanations", desc: "Every message is written like a trusted colleague is talking to you." },
-  { title: "Clear next steps", desc: "You always know what to do. Or that you don't need to do anything." },
-  { title: "Always on", desc: "Bluebox works around the clock. You don't have to think about it." },
+  { title: "Instant alerts", desc: "Know the moment something changes, before it becomes a problem." },
+  { title: "Plain language", desc: "Every message reads like a trusted colleague wrote it." },
+  { title: "Clear next steps", desc: "You always know what to do — or that you don't need to." },
+  { title: "Always on", desc: "Working quietly around the clock. No dashboards to check." },
 ];
 
 const PLANS = [
-  {
-    name: "Essentials", price: "$29", period: "/mo",
-    desc: "For small offices and single locations.",
-    items: ["Up to 10 monitored systems", "Instant alerts", "Plain-language explanations", "Email & SMS delivery"],
-  },
-  {
-    name: "Business", price: "$79", period: "/mo",
-    desc: "For growing teams across multiple spaces.",
-    items: ["Unlimited systems", "Everything in Essentials", "Priority notifications", "Monthly summary reports"],
-    highlight: true,
-  },
+  { name: "Essentials", price: "$29", period: "/mo", desc: "One location. Total peace of mind.", items: ["Up to 10 monitored systems", "Instant alerts", "Plain-language messages", "Email & SMS delivery"], highlight: false },
+  { name: "Business", price: "$79", period: "/mo", desc: "For teams that can't afford downtime.", items: ["Unlimited systems", "Everything in Essentials", "Priority notifications", "Monthly summaries"], highlight: true },
 ];
-
-const NAV_LINKS = ["How it works", "Features", "Pricing"];
 
 // ─── MAIN PAGE ───────────────────────────────────────────────────────────────
 export default function BlueboxPage() {
   const [scrolled, setScrolled] = useState(false);
+  const sceneRef = useRef(null);
+  const sceneInView = useInView(sceneRef, { once: true, margin: "-80px" });
+  const router = useRouter();
+
+  // All CTA buttons route to /get-started
+  const goToGetStarted = () => router.push("/get-started");
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
+    const fn = () => setScrolled(window.scrollY > 30);
+    window.addEventListener("scroll", fn);
+    return () => window.removeEventListener("scroll", fn);
   }, []);
 
   return (
-    <div style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Inter', sans-serif", background: "#fff", color: "#111", margin: 0, padding: 0, lineHeight: 1.6, overflowX: "hidden" }}>
+    <div style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif", background: "#fff", color: "#111", margin: 0, padding: 0, lineHeight: 1.6, overflowX: "hidden" }}>
 
       {/* ── NAV ── */}
-      <nav style={{ position: "sticky", top: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 40px", height: 60, background: scrolled ? "rgba(255,255,255,0.92)" : "#fff", backdropFilter: "blur(12px)", borderBottom: scrolled ? "1px solid #f0f0f0" : "1px solid transparent", transition: "all 0.3s ease" }}>
-        <span style={{ fontWeight: 700, fontSize: 17, letterSpacing: "-0.03em" }}>Bluebox</span>
-        <ul style={{ display: "flex", gap: 32, listStyle: "none", margin: 0, padding: 0 }}>
-          {NAV_LINKS.map(l => <li key={l}><a style={{ fontSize: 14, color: "#555", textDecoration: "none", cursor: "pointer" }}>{l}</a></li>)}
+      <motion.nav
+        initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}
+        style={{ position: "sticky", top: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 48px", height: 64, background: scrolled ? "rgba(255,255,255,0.88)" : "#fff", backdropFilter: "blur(16px)", borderBottom: `1px solid ${scrolled ? "#f0f0f0" : "transparent"}`, transition: "all 0.4s ease" }}>
+        <span style={{ fontWeight: 700, fontSize: 16, letterSpacing: "-0.04em", color: "#0a0a0a" }}>Bluebox</span>
+        <ul style={{ display: "flex", gap: 36, listStyle: "none", margin: 0, padding: 0 }}>
+          {[["How it works", "how-it-works"], ["Features", "features"], ["Pricing", "pricing"]].map(([label, id]) => {
+            const [hov, hp] = useHover();
+            return (
+              <li key={id}>
+                <a onClick={() => scrollTo(id)} {...hp}
+                  style={{ fontSize: 14, color: hov ? "#111" : "#888", textDecoration: "none", cursor: "pointer", transition: "color 0.2s", fontWeight: 400, letterSpacing: "-0.01em" }}>
+                  {label}
+                </a>
+              </li>
+            );
+          })}
         </ul>
-        <button style={{ background: "#111", color: "#fff", border: "none", borderRadius: 10, padding: "10px 22px", fontSize: 14, fontWeight: 500, cursor: "pointer" }}>
+        {/* Nav CTA → /get-started */}
+        <Btn onClick={goToGetStarted} variant="dark" style={{ padding: "9px 20px", fontSize: 13, borderRadius: 10 }}>
           Get started
-        </button>
-      </nav>
+        </Btn>
+      </motion.nav>
 
       {/* ── HERO ── */}
-      <section style={{ textAlign: "center", padding: "110px 20px 80px", maxWidth: 700, margin: "0 auto" }}>
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: "easeOut" }}>
-          <p style={{ fontSize: 12, letterSpacing: "0.1em", textTransform: "uppercase", color: "#aaa", fontWeight: 500, marginBottom: 14 }}>Calm office intelligence</p>
-          <h1 style={{ fontSize: "clamp(36px, 5vw, 58px)", fontWeight: 700, letterSpacing: "-0.035em", lineHeight: 1.1, margin: "0 0 24px", color: "#0a0a0a" }}>
-            Your office, always<br />under quiet watch.
-          </h1>
-          <p style={{ fontSize: 18, color: "#666", maxWidth: 480, margin: "0 auto 40px", lineHeight: 1.6 }}>
+      <section style={{ textAlign: "center", padding: "140px 24px 100px", maxWidth: 760, margin: "0 auto" }}>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5, delay: 0.1 }}>
+          <motion.p
+            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.15 }}
+            style={{ fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "#bbb", fontWeight: 500, marginBottom: 32 }}>
+            Calm office intelligence
+          </motion.p>
+          <motion.h1
+            initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
+            style={{ fontSize: "clamp(42px, 6vw, 72px)", fontWeight: 700, letterSpacing: "-0.04em", lineHeight: 1.05, margin: "0 0 28px", color: "#0a0a0a" }}>
+            Your office,<br />always under<br />quiet watch.
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.4 }}
+            style={{ fontSize: 19, color: "#888", maxWidth: 440, margin: "0 auto 52px", lineHeight: 1.65, fontWeight: 400, letterSpacing: "-0.01em" }}>
             A small device. A clear message when something's off. Nothing more to learn.
-          </p>
-          <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-            <button style={{ background: "#111", color: "#fff", border: "none", borderRadius: 10, padding: "13px 28px", fontSize: 15, fontWeight: 500, cursor: "pointer" }}>
-              Order Bluebox →
-            </button>
-            <button style={{ background: "transparent", color: "#555", border: "1px solid #e0e0e0", borderRadius: 10, padding: "13px 24px", fontSize: 15, cursor: "pointer" }}>
-              See how it works
-            </button>
-          </div>
+          </motion.p>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.55 }}
+            style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+            {/* Primary CTA → /get-started */}
+            <Btn onClick={goToGetStarted} variant="dark">Order Bluebox →</Btn>
+            {/* Secondary → smooth scroll */}
+            <Btn onClick={() => scrollTo("how-it-works")} variant="ghost">See how it works</Btn>
+          </motion.div>
         </motion.div>
       </section>
 
+      {/* ── DIVIDER ── */}
+      <div style={{ maxWidth: 640, margin: "0 auto", height: 1, background: "linear-gradient(to right, transparent, #ececec, transparent)" }} />
+
       {/* ── ALERT PREVIEW ── */}
-      <div style={{ background: "#fafafa", borderTop: "1px solid #f0f0f0", borderBottom: "1px solid #f0f0f0", padding: "80px 20px" }}>
-        <div style={{ maxWidth: 960, margin: "0 auto" }}>
-          <FadeIn>
-            <p style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: "#aaa", fontWeight: 500, textAlign: "center", marginBottom: 8 }}>Real messages from Bluebox</p>
-            <p style={{ textAlign: "center", fontSize: 15, color: "#999", margin: "0 0 48px" }}>This is what it actually looks like when Bluebox reaches out.</p>
-          </FadeIn>
-          <FadeIn delay={100}><AlertCard /></FadeIn>
+      <div style={{ padding: "120px 24px" }}>
+        <div style={{ maxWidth: 720, margin: "0 auto" }}>
+          <Reveal style={{ textAlign: "center", marginBottom: 64 }}>
+            <p style={{ fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "#bbb", fontWeight: 500, marginBottom: 20 }}>What it sounds like</p>
+            <h2 style={{ fontSize: "clamp(28px, 4vw, 44px)", fontWeight: 700, letterSpacing: "-0.035em", color: "#0a0a0a", lineHeight: 1.1, margin: 0 }}>
+              Plain words.<br />Not tech-speak.
+            </h2>
+          </Reveal>
+          <Reveal delay={120}><AlertCard /></Reveal>
         </div>
       </div>
 
-      {/* ── HOW IT WORKS (animated) ── */}
-      <HowItWorks />
+      {/* ── DIVIDER ── */}
+      <div style={{ maxWidth: 640, margin: "0 auto", height: 1, background: "linear-gradient(to right, transparent, #ececec, transparent)" }} />
+
+      {/* ── HOW IT WORKS ── */}
+      <section id="how-it-works" ref={sceneRef} style={{ padding: "120px 24px" }}>
+        <div style={{ maxWidth: 640, margin: "0 auto", textAlign: "center" }}>
+          <Reveal>
+            <p style={{ fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "#bbb", fontWeight: 500, marginBottom: 20 }}>How it works</p>
+            <h2 style={{ fontSize: "clamp(28px, 4vw, 44px)", fontWeight: 700, letterSpacing: "-0.035em", color: "#0a0a0a", lineHeight: 1.1, margin: "0 0 20px" }}>
+              Sits quietly.<br />Speaks simply.
+            </h2>
+            <p style={{ fontSize: 17, color: "#999", lineHeight: 1.7, margin: "0 auto", maxWidth: 400, letterSpacing: "-0.01em" }}>
+              Bluebox watches your systems in the background and tells you when something needs attention.
+            </p>
+          </Reveal>
+          <BlueboxScene play={sceneInView} />
+          <Reveal delay={3400}>
+            <div style={{ display: "flex", justifyContent: "center", gap: 56, flexWrap: "wrap", marginTop: 16 }}>
+              {[["01", "Plug it in"], ["02", "It observes"], ["03", "You're informed"]].map(([n, l]) => (
+                <div key={n} style={{ textAlign: "center" }}>
+                  <p style={{ fontSize: 10, color: "#d0d0d0", fontWeight: 600, letterSpacing: "0.1em", margin: "0 0 6px" }}>{n}</p>
+                  <p style={{ fontSize: 13, color: "#999", margin: 0, letterSpacing: "-0.01em" }}>{l}</p>
+                </div>
+              ))}
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* ── DIVIDER ── */}
+      <div style={{ maxWidth: 640, margin: "0 auto", height: 1, background: "linear-gradient(to right, transparent, #ececec, transparent)" }} />
 
       {/* ── FEATURES ── */}
-      <div style={{ background: "#fafafa", borderTop: "1px solid #f0f0f0", borderBottom: "1px solid #f0f0f0", padding: "80px 20px" }}>
+      <section id="features" style={{ padding: "120px 24px" }}>
         <div style={{ maxWidth: 960, margin: "0 auto" }}>
-          <FadeIn>
-            <p style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: "#aaa", fontWeight: 500, marginBottom: 14 }}>Features</p>
-            <h2 style={{ fontSize: "clamp(26px, 3.5vw, 38px)", fontWeight: 700, letterSpacing: "-0.03em", lineHeight: 1.15, margin: "0 0 48px", color: "#0a0a0a" }}>
+          <Reveal style={{ marginBottom: 72 }}>
+            <p style={{ fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "#bbb", fontWeight: 500, marginBottom: 20 }}>Features</p>
+            <h2 style={{ fontSize: "clamp(28px, 4vw, 44px)", fontWeight: 700, letterSpacing: "-0.035em", color: "#0a0a0a", lineHeight: 1.1, margin: 0 }}>
               Built for people,<br />not IT teams.
             </h2>
-          </FadeIn>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 32 }}>
-            {FEATURES.map((f, i) => (
-              <FadeIn key={f.title} delay={i * 80}>
-                <div style={{ background: "#fff", border: "1px solid #ebebeb", borderRadius: 16, padding: "24px 22px" }}>
-                  <p style={{ fontSize: 16, fontWeight: 600, color: "#111", margin: "0 0 8px", letterSpacing: "-0.01em" }}>{f.title}</p>
-                  <p style={{ fontSize: 14, color: "#666", lineHeight: 1.65, margin: 0 }}>{f.desc}</p>
-                </div>
-              </FadeIn>
-            ))}
+          </Reveal>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", gap: 24 }}>
+            {FEATURES.map((f, i) => {
+              const [hov, hp] = useHover();
+              return (
+                <Reveal key={f.title} delay={i * 80}>
+                  <div {...hp} style={{ background: hov ? "#fafafa" : "#fff", border: "1px solid", borderColor: hov ? "#e0e0e0" : "#f0f0f0", borderRadius: 20, padding: "32px 28px", transition: "all 0.25s ease", transform: hov ? "translateY(-2px)" : "none", boxShadow: hov ? "0 8px 32px rgba(0,0,0,0.05)" : "none" }}>
+                    <p style={{ fontSize: 15, fontWeight: 600, color: "#111", margin: "0 0 10px", letterSpacing: "-0.02em" }}>{f.title}</p>
+                    <p style={{ fontSize: 14, color: "#999", lineHeight: 1.7, margin: 0, letterSpacing: "-0.01em" }}>{f.desc}</p>
+                  </div>
+                </Reveal>
+              );
+            })}
           </div>
         </div>
-      </div>
+      </section>
+
+      {/* ── DIVIDER ── */}
+      <div style={{ maxWidth: 640, margin: "0 auto", height: 1, background: "linear-gradient(to right, transparent, #ececec, transparent)" }} />
 
       {/* ── PRICING ── */}
-      <section style={{ padding: "90px 20px", maxWidth: 960, margin: "0 auto" }}>
-        <FadeIn>
-          <p style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: "#aaa", fontWeight: 500, marginBottom: 14 }}>Pricing</p>
-          <h2 style={{ fontSize: "clamp(26px, 3.5vw, 38px)", fontWeight: 700, letterSpacing: "-0.03em", lineHeight: 1.15, margin: "0 0 60px", color: "#0a0a0a" }}>
-            Simple pricing,<br />no surprises.
-          </h2>
-        </FadeIn>
-        <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
-          {PLANS.map((plan, i) => (
-            <FadeIn key={plan.name} delay={i * 120} style={{ flex: "1 1 260px" }}>
-              <div style={{ background: plan.highlight ? "#0a0a0a" : "#fff", border: plan.highlight ? "none" : "1px solid #e8e8e8", borderRadius: 20, padding: "36px 32px", height: "100%" }}>
-                <p style={{ fontSize: 13, fontWeight: 600, color: plan.highlight ? "#888" : "#aaa", letterSpacing: "0.06em", textTransform: "uppercase", margin: "0 0 20px" }}>{plan.name}</p>
-                <div style={{ display: "flex", alignItems: "baseline", gap: 2, margin: "0 0 6px" }}>
-                  <span style={{ fontSize: 42, fontWeight: 700, letterSpacing: "-0.04em", color: plan.highlight ? "#fff" : "#111" }}>{plan.price}</span>
-                  <span style={{ fontSize: 14, color: plan.highlight ? "#666" : "#aaa" }}>{plan.period}</span>
+      <section id="pricing" style={{ padding: "120px 24px" }}>
+        <div style={{ maxWidth: 820, margin: "0 auto" }}>
+          <Reveal style={{ marginBottom: 72 }}>
+            <p style={{ fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "#bbb", fontWeight: 500, marginBottom: 20 }}>Pricing</p>
+            <h2 style={{ fontSize: "clamp(28px, 4vw, 44px)", fontWeight: 700, letterSpacing: "-0.035em", color: "#0a0a0a", lineHeight: 1.1, margin: 0 }}>
+              One price.<br />No surprises.
+            </h2>
+          </Reveal>
+          <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
+            {PLANS.map((plan, i) => (
+              <Reveal key={plan.name} delay={i * 120} style={{ flex: "1 1 280px" }}>
+                <div style={{ background: plan.highlight ? "#0a0a0a" : "#fff", border: `1px solid ${plan.highlight ? "transparent" : "#f0f0f0"}`, borderRadius: 24, padding: "44px 40px", height: "100%", boxShadow: plan.highlight ? "0 24px 64px rgba(0,0,0,0.14)" : "none" }}>
+                  <p style={{ fontSize: 11, fontWeight: 600, color: plan.highlight ? "#666" : "#bbb", letterSpacing: "0.1em", textTransform: "uppercase", margin: "0 0 28px" }}>{plan.name}</p>
+                  <div style={{ display: "flex", alignItems: "baseline", gap: 3, margin: "0 0 8px" }}>
+                    <span style={{ fontSize: 52, fontWeight: 700, letterSpacing: "-0.05em", lineHeight: 1, color: plan.highlight ? "#fff" : "#0a0a0a" }}>{plan.price}</span>
+                    <span style={{ fontSize: 14, color: plan.highlight ? "#555" : "#bbb", letterSpacing: "-0.01em" }}>{plan.period}</span>
+                  </div>
+                  <p style={{ fontSize: 14, color: plan.highlight ? "#666" : "#aaa", margin: "0 0 36px", letterSpacing: "-0.01em" }}>{plan.desc}</p>
+                  <ul style={{ listStyle: "none", padding: 0, margin: "0 0 40px" }}>
+                    {plan.items.map(item => (
+                      <li key={item} style={{ fontSize: 14, color: plan.highlight ? "#aaa" : "#666", padding: "10px 0", borderBottom: `1px solid ${plan.highlight ? "#1a1a1a" : "#f5f5f5"}`, display: "flex", gap: 12, alignItems: "center", letterSpacing: "-0.01em" }}>
+                        <span style={{ color: plan.highlight ? "#3b82f6" : "#22c55e", fontSize: 12, fontWeight: 700, flexShrink: 0 }}>✓</span>{item}
+                      </li>
+                    ))}
+                  </ul>
+                  {/* Pricing CTA → /get-started */}
+                  <Btn onClick={goToGetStarted} variant={plan.highlight ? "white" : "ghost"} style={{ width: "100%", justifyContent: "center", borderRadius: 12 }}>
+                    Get started
+                  </Btn>
                 </div>
-                <p style={{ fontSize: 14, color: plan.highlight ? "#777" : "#999", margin: "0 0 28px" }}>{plan.desc}</p>
-                <ul style={{ listStyle: "none", padding: 0, margin: "0 0 32px" }}>
-                  {plan.items.map(item => (
-                    <li key={item} style={{ fontSize: 14, color: plan.highlight ? "#ccc" : "#555", padding: "7px 0", borderBottom: `1px solid ${plan.highlight ? "#222" : "#f5f5f5"}`, display: "flex", gap: 10, alignItems: "center" }}>
-                      <span style={{ color: plan.highlight ? "#3b82f6" : "#22c55e", fontSize: 13, fontWeight: 700 }}>✓</span> {item}
-                    </li>
-                  ))}
-                </ul>
-                <button style={{ width: "100%", padding: "13px", borderRadius: 10, border: plan.highlight ? "none" : "1px solid #e0e0e0", background: plan.highlight ? "#fff" : "transparent", color: "#111", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
-                  Get started
-                </button>
-              </div>
-            </FadeIn>
-          ))}
+              </Reveal>
+            ))}
+          </div>
         </div>
       </section>
 
       {/* ── FINAL CTA ── */}
-      <div style={{ background: "#0a0a0a", padding: "100px 20px" }}>
-        <FadeIn>
-          <div style={{ textAlign: "center", maxWidth: 560, margin: "0 auto" }}>
-            <h2 style={{ fontSize: "clamp(28px, 4vw, 46px)", fontWeight: 700, letterSpacing: "-0.035em", color: "#fff", margin: "0 0 18px", lineHeight: 1.12 }}>
+      <div style={{ background: "#0a0a0a", padding: "140px 24px" }}>
+        <Reveal>
+          <div style={{ textAlign: "center", maxWidth: 520, margin: "0 auto" }}>
+            <h2 style={{ fontSize: "clamp(32px, 5vw, 56px)", fontWeight: 700, letterSpacing: "-0.04em", color: "#fff", margin: "0 0 20px", lineHeight: 1.05 }}>
               Stop wondering.<br />Start knowing.
             </h2>
-            <p style={{ fontSize: 16, color: "#666", margin: "0 0 40px" }}>
-              Bluebox sits quietly in your office, so you never have to worry about what's happening behind the scenes.
+            <p style={{ fontSize: 17, color: "#555", margin: "0 0 48px", lineHeight: 1.65, letterSpacing: "-0.01em" }}>
+              Bluebox sits quietly in your office so you never have to worry about what's happening behind the scenes.
             </p>
-            <button style={{ background: "#fff", color: "#111", border: "none", borderRadius: 12, padding: "15px 34px", fontSize: 16, fontWeight: 600, cursor: "pointer", letterSpacing: "-0.02em" }}>
+            {/* Final CTA → /get-started */}
+            <Btn onClick={goToGetStarted} variant="white" style={{ fontSize: 15, padding: "14px 32px" }}>
               Order Bluebox →
-            </button>
+            </Btn>
           </div>
-        </FadeIn>
+        </Reveal>
       </div>
 
       {/* ── FOOTER ── */}
-      <footer style={{ textAlign: "center", padding: "40px 20px", borderTop: "1px solid #f0f0f0", color: "#ccc", fontSize: 13 }}>
-        © {new Date().getFullYear()} Bluebox. All rights reserved.
+      <footer style={{ textAlign: "center", padding: "48px 24px", borderTop: "1px solid #f0f0f0" }}>
+        <p style={{ fontSize: 13, color: "#d0d0d0", margin: 0, letterSpacing: "-0.01em" }}>© {new Date().getFullYear()} Bluebox. All rights reserved.</p>
       </footer>
 
     </div>
